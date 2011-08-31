@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file. Any modifications will be overwritten.
+  To include a user specific buildfile here, simply create one in the same
+  directory with the processing instruction <?eclipse.ant.import?> as the first
+  entry and export the buildfile again. -->
+<project basedir="." default="build" name="RedisManager">
+  <property environment="env" />
+  <property name="debuglevel" value="source,lines,vars" />
+  <property name="target" value="1.5" />
+  <property name="source" value="1.5" />
+  <path id="RedisManager.classpath">
+    <pathelement location="bin" />
+    <pathelement location="lib/catalina.jar" />
+    <pathelement location="lib/cglib-nodep-2.2.jar" />
+    <pathelement location="lib/dom4j-1.6.1.jar" />
+    <pathelement location="lib/jdom-1.1.jar" />
+    <pathelement location="lib/jettison-1.0.1.jar" />
+    <pathelement location="lib/joda-time-1.6.jar" />
+    <pathelement location="lib/servlet-api.jar" />
+    <pathelement location="lib/tomcat-coyote.jar" />
+    <pathelement location="lib/tomcat-juli.jar" />
+    <pathelement location="lib/xom-1.1.jar" />
+  </path>
+  <target name="init">
+    <mkdir dir="bin" />
+    <copy includeemptydirs="false" todir="bin">
+      <fileset dir="src">
+        <exclude name="**/*.launch" />
+        <exclude name="**/*.java" />
+      </fileset>
+    </copy>
+  </target>
+  <target name="clean">
+    <delete dir="bin" />
+  </target>
+  <target depends="clean" name="cleanall" />
+  <target depends="build-subprojects,build-project" name="build" />
+  <target name="build-subprojects" />
+  <target depends="init" name="build-project">
+    <echo message="${ant.project.name}: ${ant.file}" />
+    <javac debug="true" debuglevel="${debuglevel}" destdir="bin"
+      source="${source}" target="${target}">
+      <src path="src" />
+      <classpath refid="RedisManager.classpath" />
+    </javac>
+
+    <echo message="-post-build:begin" />
+    <echo message="project path: ${basedir}" />
+
+    <jar destfile="${basedir}/wjw-redismanager.jar">
+      <fileset dir="${basedir}/bin">
+        <include name="**/ext/**" />
+        <include name="redis/**" />
+        <include name="internal/**" />
+      </fileset>
+      <fileset dir="${basedir}/xpp3">
+        <include name="**" />
+      </fileset>
+    </jar>
+
+    <jar destfile="${basedir}/wjw-jedis2.0.0.jar">
+      <fileset dir="${basedir}/bin">
+        <include name="redis/**" />
+      </fileset>
+    </jar>
+
+    <echo message="-post-build:end" />
+
+  </target>
+  <target
+    description="Build all projects which reference this project. Useful to propagate changes."
+    name="build-refprojects" />
+</project>
