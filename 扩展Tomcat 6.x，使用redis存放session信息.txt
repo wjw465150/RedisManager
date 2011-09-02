@@ -1,7 +1,8 @@
+1.实现思路:
 实现RedisManager继承 org.apache.catalina.session.StandardManager， 
 MemcachedSession继承 org.apache.catalina.session.StandardSession。 
 
-安装步骤:
+2.安装步骤:
 1. 复制:wjw-redismanager.jar,(已经把xstream,xpp3,redis,common-pool加入到内部引用)
 到x:\apache-tomcat-6.X.XX\lib下面
 
