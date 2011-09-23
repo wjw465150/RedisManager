@@ -4,6 +4,7 @@ import org.apache.catalina.session.*;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
+//imp tomcat StandardSession
 public class RedisSession extends StandardSession {
 
   protected transient Log log = LogFactory.getLog(RedisSession.class);
