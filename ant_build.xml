@@ -53,9 +53,6 @@
         <include name="redis/**" />
         <include name="internal/**" />
       </fileset>
-      <fileset dir="${basedir}/xpp3">
-        <include name="**" />
-      </fileset>
     </jar>
 
     <jar destfile="${basedir}/wjw-jedis2.0.0.jar">

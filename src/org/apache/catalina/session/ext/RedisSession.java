@@ -1,119 +1,121 @@
 package org.apache.catalina.session.ext;
 
-import org.apache.catalina.session.*;
+import org.apache.catalina.session.StandardSession;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+
+import redis.clients.jedis.Protocol;
 
 //imp tomcat StandardSession
 public class RedisSession extends StandardSession {
 
-  protected transient Log log = LogFactory.getLog(RedisSession.class);
-  protected transient RedisManager _manager;
+	protected transient Log log = LogFactory.getLog(RedisSession.class);
+	protected transient RedisManager _manager;
 
-  public RedisSession(RedisManager manager) {
-    super(manager);
+	public RedisSession(RedisManager manager) {
+		super(manager);
 
-    this._manager = manager;
-  }
+		this._manager = manager;
+	}
 
-  /**
-   * Update the accessed time information for this session.  This method
-   * should be called by the context when a request comes in for a particular
-   * session, even if the application does not reference it.
-   */
-  @Override
-  public void access() {
-    if (_manager.debugEnabled) {
-      log.info("id=" + this.id);
-    }
-    super.access();
+	/**
+	 * Update the accessed time information for this session. This method should
+	 * be called by the context when a request comes in for a particular session,
+	 * even if the application does not reference it.
+	 */
+	@Override
+	public void access() {
+		if (_manager.debugEnabled) {
+			log.info("id=" + this.id);
+		}
+		super.access();
 
-    try {
-      _manager.jedisSetex(this.id, this.maxInactiveInterval, RedisManager.SNA_ID_VALUE);
-    } catch (Exception ex) {
-      log.error("error:", ex);
-    }
-  }
+		try {
+			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
+		} catch (Exception ex) {
+			log.error("error:", ex);
+		}
+	}
 
-  @Override
-  public Object getAttribute(String name) {
-    Object value = super.getAttribute(name);
+	@Override
+	public Object getAttribute(String name) {
+		Object value = super.getAttribute(name);
 
-    if (name.startsWith("javax.zkoss.zk.ui.Session")) {
-      return value;
-    }
+		if (name.startsWith("javax.zkoss.zk.ui.Session")) {
+			return value;
+		}
 
-    try {
-      String key = this.id + ":" + name;
+		try {
+			byte[] bytesValue = _manager.jedisHget(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
+			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
+			if (bytesValue == null) {
+				return value;
+			}
 
-      String strValue = _manager.jedisGet(key);
-      if (strValue == null) {
-        return value;
-      }
-      if (_manager.debugEnabled) {
-        log.info("id=" + this.id + ",name=" + name + ",strValue=" + strValue);
-      }
-      return RedisManager._xstream.fromXML(strValue);
-    } catch (Exception ex) {
-      log.error("error:name=" + name + ";value=" + value, ex);
-      return value;
-    }
-  }
+			if (_manager.debugEnabled) {
+				log.info("id=" + this.id + ",name=" + name + ",strValue=" + new String(bytesValue, Protocol.CHARSET));
+			}
 
-  @Override
-  public void setAttribute(String name, Object value) {
-    super.setAttribute(name, value);
+			return _manager.deserialize(bytesValue);
+		} catch (Exception ex) {
+			log.error("error:name=" + name + ";value=" + value, ex);
+			return value;
+		}
+	}
 
-    if (value == null) {
-      return;
-    }
+	@Override
+	public void setAttribute(String name, Object value) {
+		super.setAttribute(name, value);
 
-    if (name.startsWith("javax.zkoss.zk.ui.Session")) {
-      return;
-    }
+		if (value == null) {
+			return;
+		}
 
-    try {
-      String key = this.id + ":" + name;
-      String strValue = RedisManager._xstream.toXML(value);
-      if (_manager.debugEnabled) {
-        log.info("id=" + this.id + ",name=" + name + ",strValue=" + strValue);
-      }
-      _manager.jedisSetex(key, RedisManager.LIFE_TIME, strValue);
-    } catch (Exception ex) {
-      log.error("error:name=" + name + ";value=" + value, ex);
-    }
-  }
+		if (name.startsWith("javax.zkoss.zk.ui.Session")) {
+			return;
+		}
 
-  @Override
-  protected void removeAttributeInternal(String name, boolean notify) {
-    if (_manager.debugEnabled) {
-      log.info("id=" + this.id + ",name=" + name + ",notify=" + notify);
-    }
-    super.removeAttributeInternal(name, notify);
+		try {
+			byte[] bytesValue = _manager.serialize(value);
+			if (_manager.debugEnabled) {
+				log.info("id=" + this.id + ",name=" + name + ",strValue=" + new String(bytesValue, Protocol.CHARSET));
+			}
+			_manager.jedisHset(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name, bytesValue);
+			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
+		} catch (Exception ex) {
+			log.error("error:name=" + name + ";value=" + value, ex);
+		}
+	}
 
-    try {
-      String key = this.id + ":" + name;
-      _manager.jedisDel(key);
-    } catch (Exception ex) {
-      log.error("error:", ex);
-    }
-  }
+	@Override
+	protected void removeAttributeInternal(String name, boolean notify) {
+		if (_manager.debugEnabled) {
+			log.info("id=" + this.id + ",name=" + name + ",notify=" + notify);
+		}
+		super.removeAttributeInternal(name, notify);
 
-  @Override
-  public void expire(boolean notify) {
-    if (_manager.debugEnabled) {
-      log.info("id=" + this.id + ",notify=" + notify);
-    }
-    super.expire(notify);  //在expire里就会清空当前session的所有属性
+		try {
+			_manager.jedisHdel(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
+		} catch (Exception ex) {
+			log.error("error:", ex);
+		}
+	}
 
-    try {
-      _manager.jedisDel(this.id);
-    } catch (Exception ex) {
-      log.error("error:", ex);
-    }
-  }
+	@Override
+	public void expire(boolean notify) {
+		if (_manager.debugEnabled) {
+			log.info("id=" + this.id + ",notify=" + notify);
+		}
+		super.expire(notify); //在expire里就会清空当前session的所有属性
 
-  void setCachedId(String id) {
-    this.id = id;
-  }
+		try {
+			_manager.jedisDel(RedisManager.TOMCAT_SESSION_PREFIX + this.id);
+		} catch (Exception ex) {
+			log.error("error:", ex);
+		}
+	}
+
+	void setCachedId(String id) {
+		this.id = id;
+	}
 }

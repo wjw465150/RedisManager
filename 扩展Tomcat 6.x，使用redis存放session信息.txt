@@ -3,7 +3,7 @@
 MemcachedSession继承 org.apache.catalina.session.StandardSession。 
 
 2.安装步骤:
-1. 复制:wjw-redismanager.jar,(已经把xstream,xpp3,redis,common-pool加入到内部引用)
+1. 复制:wjw-redismanager.jar,(已经把JBossSerialization,trove,redis,common-pool加入到内部引用)
 到x:\apache-tomcat-6.X.XX\lib下面
 
 2. x:\apache-tomcat-6.X.XX\conf下文件context.xml中添加:
