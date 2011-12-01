@@ -3,14 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
 	<classpathentry kind="lib" path="lib/catalina.jar"/>
-	<classpathentry kind="lib" path="lib/cglib-nodep-2.2.jar"/>
-	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
-	<classpathentry kind="lib" path="lib/jdom-1.1.jar"/>
-	<classpathentry kind="lib" path="lib/jettison-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib/joda-time-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-coyote.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-juli.jar"/>
-	<classpathentry kind="lib" path="lib/xom-1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
