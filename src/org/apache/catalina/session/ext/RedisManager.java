@@ -158,6 +158,9 @@ public class RedisManager extends StandardManager {
 	@Override
 	public Session findSession(String id) throws IOException {
 		Session session = super.findSession(id);
+		if (!this.isInitialized()) {
+			return session;
+		}
 		if (session == null && id != null) { //说明session有可能在另一个节点上
 			try {
 				boolean idExists = jedisExists(TOMCAT_SESSION_PREFIX + id);
@@ -201,6 +204,10 @@ public class RedisManager extends StandardManager {
 	@Override
 	public Session createSession(String sessionId) {
 		Session session = super.createSession(sessionId);
+		if (!this.isInitialized()) {
+			return session;
+		}
+
 		sessionId = session.getId();
 		if (this.debugEnabled) {
 			log.info("id=" + sessionId);
@@ -240,12 +247,19 @@ public class RedisManager extends StandardManager {
 			log.info("id=" + session.getId());
 		}
 		super.remove(session);
+		if (!this.isInitialized()) {
+			return;
+		}
 
 		try {
 			jedisDel(TOMCAT_SESSION_PREFIX + session.getId());
 		} catch (Exception ex) {
 			log.error("error:", ex);
 		}
+	}
+
+	public boolean isInitialized() {
+		return super.initialized;
 	}
 
 	@Override
@@ -311,6 +325,8 @@ public class RedisManager extends StandardManager {
 
 	@Override
 	public void destroy() {
+		super.destroy();
+
 		synchronized (RedisManager.class) {
 			if (_shardedPool != null) {
 				ShardedJedisPool myPool = _shardedPool;
@@ -336,8 +352,6 @@ public class RedisManager extends StandardManager {
 
 			}
 		}
-
-		super.destroy();
 	}
 
 	@Override

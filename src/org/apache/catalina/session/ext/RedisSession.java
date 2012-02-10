@@ -30,6 +30,9 @@ public class RedisSession extends StandardSession {
 		}
 		super.access();
 
+		if (!_manager.isInitialized()) {
+			return;
+		}
 		try {
 			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
 		} catch (Exception ex) {
@@ -45,6 +48,9 @@ public class RedisSession extends StandardSession {
 			return value;
 		}
 
+		if (!_manager.isInitialized()) {
+			return value;
+		}
 		try {
 			byte[] bytesValue = _manager.jedisHget(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
 			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
@@ -75,6 +81,9 @@ public class RedisSession extends StandardSession {
 			return;
 		}
 
+		if (!_manager.isInitialized()) {
+			return;
+		}
 		try {
 			byte[] bytesValue = _manager.serialize(value);
 			if (_manager.debugEnabled) {
@@ -94,6 +103,9 @@ public class RedisSession extends StandardSession {
 		}
 		super.removeAttributeInternal(name, notify);
 
+		if (!_manager.isInitialized()) {
+			return;
+		}
 		try {
 			_manager.jedisHdel(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
 		} catch (Exception ex) {
@@ -108,6 +120,9 @@ public class RedisSession extends StandardSession {
 		}
 		super.expire(notify); //在expire里就会清空当前session的所有属性
 
+		if (!_manager.isInitialized()) {
+			return;
+		}
 		try {
 			_manager.jedisDel(RedisManager.TOMCAT_SESSION_PREFIX + this.id);
 		} catch (Exception ex) {
