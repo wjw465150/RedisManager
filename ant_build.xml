@@ -14,6 +14,10 @@
     <pathelement location="lib/servlet-api.jar" />
     <pathelement location="lib/tomcat-coyote.jar" />
     <pathelement location="lib/tomcat-juli.jar" />
+  	<pathelement location="lib/jarjar-1.2.jar"/>
+  	<pathelement location="lib/com.springsource.org.apache.commons.pool-1.5.3.jar"/>
+  	<pathelement location="lib/jboss-serialization.jar"/>
+  	<pathelement location="lib/trove.jar"/>
   </path>
   <target name="init">
     <mkdir dir="bin" />
@@ -41,14 +45,35 @@
     <echo message="-post-build:begin" />
     <echo message="project path: ${basedir}" />
 
+  	<!-- 生成不需要依赖的wjw-redismanager.jar  -->
+  	<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"  classpath="lib/jarjar-1.2.jar"/>
+  	<jarjar jarfile="${basedir}/wjw-redismanager.jar">
+  		<fileset dir="${basedir}/bin">
+  		  <include name="**/ext/**" />
+  		  <include name="redis/**" />
+  		</fileset>
+    	<zipfileset src="lib/com.springsource.org.apache.commons.pool-1.5.3.jar"/>
+    	<zipfileset src="lib/jboss-serialization.jar"/>
+    	<zipfileset src="lib/trove.jar"/>
+
+  		<rule pattern="gnu.trove.**" result="internal.gnu.trove.@1"/>
+  		<rule pattern="org.apache.commons.pool.**" result="internal.org.apache.commons.pool.@1"/>
+  		<rule pattern="org.jboss.serial.**" result="internal.org.jboss.serial.@1"/>
+  		<rule pattern="redis.**" result="internal.redis.@1"/>
+    </jarjar>
+  	<delete dir="${basedir}/tmp" quiet="true"/>
+  	<mkdir dir="${basedir}/tmp"/>
+  	<unzip src="${basedir}/wjw-redismanager.jar" dest="${basedir}/tmp">
+  	</unzip>
+  	<delete file="${basedir}/wjw-redismanager.jar"/>
     <jar destfile="${basedir}/wjw-redismanager.jar">
-      <fileset dir="${basedir}/bin">
-        <include name="**/ext/**" />
-        <include name="redis/**" />
+      <fileset dir="${basedir}/tmp">
         <include name="internal/**" />
+        <include name="org/apache/catalina/**" />
       </fileset>
     </jar>
-
+  	<delete dir="${basedir}/tmp" quiet="true"/>
+  	
     <jar destfile="${basedir}/wjw-jedis2.0.0.jar">
       <fileset dir="${basedir}/bin">
         <include name="redis/**" />

@@ -6,5 +6,9 @@
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-coyote.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-juli.jar"/>
+	<classpathentry kind="lib" path="lib/com.springsource.org.apache.commons.pool-1.5.3.jar"/>
+	<classpathentry kind="lib" path="lib/jarjar-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/jboss-serialization.jar"/>
+	<classpathentry kind="lib" path="lib/trove.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

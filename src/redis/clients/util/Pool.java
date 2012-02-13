@@ -1,7 +1,7 @@
 package redis.clients.util;
 
-import internal.org.apache.commons.pool.PoolableObjectFactory;
-import internal.org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool.PoolableObjectFactory;
+import org.apache.commons.pool.impl.GenericObjectPool;
 
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;

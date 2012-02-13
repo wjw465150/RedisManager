@@ -3,8 +3,8 @@ package redis.clients.jedis;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import internal.org.apache.commons.pool.BasePoolableObjectFactory;
-import internal.org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool.BasePoolableObjectFactory;
+import org.apache.commons.pool.impl.GenericObjectPool;
 
 import redis.clients.util.Hashing;
 import redis.clients.util.Pool;

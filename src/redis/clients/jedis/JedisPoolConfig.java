@@ -1,6 +1,6 @@
 package redis.clients.jedis;
 
-import internal.org.apache.commons.pool.impl.GenericObjectPool.Config;
+import org.apache.commons.pool.impl.GenericObjectPool.Config;
 
 /**
  * Subclass of org.apache.commons.pool.impl.GenericObjectPool.Config that

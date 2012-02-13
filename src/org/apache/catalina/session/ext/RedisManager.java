@@ -1,8 +1,8 @@
 package org.apache.catalina.session.ext;
 
-import internal.org.apache.commons.pool.impl.GenericObjectPool;
-import internal.org.jboss.serial.io.JBossObjectInputStream;
-import internal.org.jboss.serial.io.JBossObjectOutputStream;
+import org.apache.commons.pool.impl.GenericObjectPool;
+import org.jboss.serial.io.JBossObjectInputStream;
+import org.jboss.serial.io.JBossObjectOutputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
