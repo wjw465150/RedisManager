@@ -1,11 +1,14 @@
 package redis.clients.jedis;
 
+import static redis.clients.jedis.Protocol.toByteArray;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 public class BinaryTransaction extends Queable {
     protected Client client = null;
@@ -28,9 +31,28 @@ public class BinaryTransaction extends Queable {
         }
         List<Object> formatted = new ArrayList<Object>();
         for (Object o : unformatted) {
-            formatted.add(generateResponse(o).get());
+        	try{
+        		formatted.add(generateResponse(o).get());
+        	}catch(JedisDataException e){
+        		formatted.add(e);
+        	}
         }
         return formatted;
+    }
+    
+    public List<Response<?>> execGetResponse() {
+        client.exec();
+        client.getAll(1); // Discard all but the last reply
+
+        List<Object> unformatted = client.getObjectMultiBulkReply();
+        if (unformatted == null) {
+            return null;
+        }
+        List<Response<?>> response = new ArrayList<Response<?>>();
+        for (Object o : unformatted) {
+        	response.add(generateResponse(o));
+        }
+        return response;
     }
 
     public String discard() {
@@ -426,6 +448,10 @@ public class BinaryTransaction extends Queable {
     }
 
     public Response<Long> zcount(byte[] key, double min, double max) {
+        return zcount(key, toByteArray(min), toByteArray(max));
+    }
+    
+    public Response<Long> zcount(byte[] key, byte[] min, byte[] max) {
         client.zcount(key, min, max);
         return getResponse(BuilderFactory.LONG);
     }
@@ -453,30 +479,44 @@ public class BinaryTransaction extends Queable {
 
     public Response<Set<byte[]>> zrangeByScore(byte[] key, double min,
             double max) {
+        return zrangeByScore(key, toByteArray(min), toByteArray(max));
+    }
+    
+    public Response<Set<byte[]>> zrangeByScore(byte[] key, byte[] min,
+    		byte[] max) {
         client.zrangeByScore(key, min, max);
         return getResponse(BuilderFactory.BYTE_ARRAY_ZSET);
     }
 
     public Response<Set<byte[]>> zrangeByScore(byte[] key, byte[] min,
-            byte[] max) {
-        client.zrangeByScore(key, min, max);
-        return getResponse(BuilderFactory.BYTE_ARRAY_ZSET);
-    }
-
-    public Response<Set<byte[]>> zrangeByScore(byte[] key, double min,
-            double max, int offset, int count) {
+    		byte[] max, int offset, int count) {
         client.zrangeByScore(key, min, max, offset, count);
         return getResponse(BuilderFactory.BYTE_ARRAY_ZSET);
+    }
+    
+    public Response<Set<byte[]>> zrangeByScore(byte[] key, double min,
+            double max, int offset, int count) {
+        return zrangeByScore(key, toByteArray(min), toByteArray(max), offset, count);
     }
 
     public Response<Set<Tuple>> zrangeByScoreWithScores(byte[] key, double min,
             double max) {
-        client.zrangeByScoreWithScores(key, min, max);
-        return getResponse(BuilderFactory.TUPLE_ZSET_BINARY);
+        return zrangeByScoreWithScores(key, toByteArray(min), toByteArray(max));
     }
 
     public Response<Set<Tuple>> zrangeByScoreWithScores(byte[] key, double min,
             double max, int offset, int count) {
+        return zrangeByScoreWithScores(key, toByteArray(min), toByteArray(max), offset, count);
+    }
+    
+    public Response<Set<Tuple>> zrangeByScoreWithScores(byte[] key, byte[] min,
+    		byte[] max) {
+        client.zrangeByScoreWithScores(key, min, max);
+        return getResponse(BuilderFactory.TUPLE_ZSET_BINARY);
+    }
+
+    public Response<Set<Tuple>> zrangeByScoreWithScores(byte[] key, byte[] min,
+    		byte[] max, int offset, int count) {
         client.zrangeByScoreWithScores(key, min, max, offset, count);
         return getResponse(BuilderFactory.TUPLE_ZSET_BINARY);
     }
@@ -502,6 +542,10 @@ public class BinaryTransaction extends Queable {
     }
 
     public Response<Long> zremrangeByScore(byte[] key, double start, double end) {
+        return zremrangeByScore(key, toByteArray(start), toByteArray(end));
+    }
+    
+    public Response<Long> zremrangeByScore(byte[] key, byte[] start, byte[] end) {
         client.zremrangeByScore(key, start, end);
         return getResponse(BuilderFactory.LONG);
     }
@@ -542,5 +586,90 @@ public class BinaryTransaction extends Queable {
             int timeout) {
         client.brpoplpush(source, destination, timeout);
         return getResponse(BuilderFactory.BYTE_ARRAY);
+    }
+    
+    public Response<String> select(final int index) {
+        client.select(index);
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<String> flushDB() {
+        client.flushDB();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<String> flushAll() {
+        client.flushAll();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<String> save() {
+        client.save();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<String> info() {
+        client.info();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<Long> lastsave() {
+        client.lastsave();
+        return getResponse(BuilderFactory.LONG);
+    }
+    
+    public Response<Long> dbSize() {
+        client.dbSize();
+        return getResponse(BuilderFactory.LONG);
+    }
+    
+    public Response<List<byte[]>> configGet(final byte[] pattern) {
+        client.configGet(pattern);
+        return getResponse(BuilderFactory.BYTE_ARRAY_LIST);
+    }
+    
+    public Response<byte[]> configSet(final byte[] parameter, final byte[] value) {
+        client.configSet(parameter, value);
+        return getResponse(BuilderFactory.BYTE_ARRAY);
+    }
+    
+    public Response<String> configResetStat() {
+        client.configResetStat();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<String> shutdown() {
+        client.shutdown();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<Boolean> getbit(final byte[] key, final long offset) {
+        client.getbit(key, offset);
+        return getResponse(BuilderFactory.BOOLEAN);
+    }
+    
+    public Response<Boolean> setbit(final byte[] key, final long offset, final byte[] value) {
+        client.setbit(key, offset, value);
+        return getResponse(BuilderFactory.BOOLEAN);
+    }
+    
+    public Response<String> ping() {
+        client.ping();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<Long> setrange(byte[] key, long offset, byte[] value) {
+        client.setrange(key, offset, value);
+        return getResponse(BuilderFactory.LONG);
+    }
+    
+    public Response<String> randomKey() {
+        client.randomKey();
+        return getResponse(BuilderFactory.STRING);
+    }
+    
+    public Response<Long> publish(byte[] channel, byte[] message) {
+        client.publish(channel, message);
+        return getResponse(BuilderFactory.LONG);
     }
 }

@@ -22,11 +22,11 @@ public interface JedisCommands {
 
     Long ttl(String key);
 
-    boolean setbit(String key, long offset, boolean value);
+    Boolean setbit(String key, long offset, boolean value);
 
-    boolean getbit(String key, long offset);
+    Boolean getbit(String key, long offset);
 
-    long setrange(String key, long offset, String value);
+    Long setrange(String key, long offset, String value);
 
     String getrange(String key, long startOffset, long endOffset);
 
@@ -62,7 +62,7 @@ public interface JedisCommands {
 
     Boolean hexists(String key, String field);
 
-    Long hdel(String key, String field);
+    Long hdel(String key, String... field);
 
     Long hlen(String key);
 
@@ -72,9 +72,9 @@ public interface JedisCommands {
 
     Map<String, String> hgetAll(String key);
 
-    Long rpush(String key, String string);
+    Long rpush(String key, String... string);
 
-    Long lpush(String key, String string);
+    Long lpush(String key, String... string);
 
     Long llen(String key);
 
@@ -92,11 +92,11 @@ public interface JedisCommands {
 
     String rpop(String key);
 
-    Long sadd(String key, String member);
+    Long sadd(String key, String... member);
 
     Set<String> smembers(String key);
 
-    Long srem(String key, String member);
+    Long srem(String key, String... member);
 
     String spop(String key);
 
@@ -107,10 +107,12 @@ public interface JedisCommands {
     String srandmember(String key);
 
     Long zadd(String key, double score, String member);
+    
+    Long zadd(String key, Map<Double, String> scoreMembers);
 
-    Set<String> zrange(String key, int start, int end);
+    Set<String> zrange(String key, long start, long end);
 
-    Long zrem(String key, String member);
+    Long zrem(String key, String... member);
 
     Double zincrby(String key, double score, String member);
 
@@ -118,11 +120,11 @@ public interface JedisCommands {
 
     Long zrevrank(String key, String member);
 
-    Set<String> zrevrange(String key, int start, int end);
+    Set<String> zrevrange(String key, long start, long end);
 
-    Set<Tuple> zrangeWithScores(String key, int start, int end);
+    Set<Tuple> zrangeWithScores(String key, long start, long end);
 
-    Set<Tuple> zrevrangeWithScores(String key, int start, int end);
+    Set<Tuple> zrevrangeWithScores(String key, long start, long end);
 
     Long zcard(String key);
 
@@ -134,11 +136,20 @@ public interface JedisCommands {
 
     Long zcount(String key, double min, double max);
 
+    Long zcount(String key, String min, String max);
+
     Set<String> zrangeByScore(String key, double min, double max);
+
+    Set<String> zrangeByScore(String key, String min, String max);
 
     Set<String> zrevrangeByScore(String key, double max, double min);
 
     Set<String> zrangeByScore(String key, double min, double max, int offset,
+            int count);
+
+    Set<String> zrevrangeByScore(String key, String max, String min);
+
+    Set<String> zrangeByScore(String key, String min, String max, int offset,
             int count);
 
     Set<String> zrevrangeByScore(String key, double max, double min,
@@ -150,14 +161,33 @@ public interface JedisCommands {
 
     Set<Tuple> zrangeByScoreWithScores(String key, double min, double max,
             int offset, int count);
+    
+    Set<String> zrevrangeByScore(String key, String max, String min,
+            int offset, int count);
+
+    Set<Tuple> zrangeByScoreWithScores(String key, String min, String max);
+    
+    Set<Tuple> zrevrangeByScoreWithScores(String key, String max, String min);
+
+    Set<Tuple> zrangeByScoreWithScores(String key, String min, String max,
+            int offset, int count);
 
     Set<Tuple> zrevrangeByScoreWithScores(String key, double max, double min,
             int offset, int count);
+    
+    Set<Tuple> zrevrangeByScoreWithScores(String key, String max, String min,
+            int offset, int count);
 
-    Long zremrangeByRank(String key, int start, int end);
+    Long zremrangeByRank(String key, long start, long end);
 
     Long zremrangeByScore(String key, double start, double end);
+    
+    Long zremrangeByScore(String key, String start, String end);
 
     Long linsert(String key, Client.LIST_POSITION where, String pivot,
             String value);
+    
+    Long lpushx(String key, String string);
+    
+    Long rpushx(String key, String string); 
 }
