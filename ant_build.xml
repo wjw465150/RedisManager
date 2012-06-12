@@ -79,19 +79,7 @@
     </jar>
   	<delete dir="${basedir}/tmp" quiet="true"/>
   	
-    <jar destfile="${basedir}/wjw-jedis2.1.0.jar">
-      <fileset dir="${basedir}/bin">
-        <include name="redis/**" />
-      </fileset>
-  	  <manifest>
-  		  <attribute name="Built-By" value="wjw465150@gmail.com" />
-  		  <attribute name="Build-Name" value="wjw-redismanager" />
-  		  <attribute name="Build-Version" value="2.1" />
-  	  </manifest>
-    </jar>
-
     <echo message="-post-build:end" />
-
   </target>
   <target
     description="Build all projects which reference this project. Useful to propagate changes."
