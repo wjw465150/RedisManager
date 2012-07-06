@@ -213,11 +213,6 @@ public class RedisManager extends StandardManager {
 			log.info("id=" + sessionId);
 		}
 
-		try {
-			jedisExpire(TOMCAT_SESSION_PREFIX + sessionId, session.getMaxInactiveInterval());
-		} catch (Exception ex) {
-			log.error("error:", ex);
-		}
 		return session;
 	}
 
