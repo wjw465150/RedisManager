@@ -53,6 +53,28 @@ public class RedisManager extends StandardManager {
 		this.debug = debug;
 	}
 
+	boolean stickySessionEnabled = true;
+	private String stickySession = "true"; //是否打开会话粘连模式
+
+	/**
+	 * 是否打开会话粘连模式
+	 * 
+	 * @return the stickySession
+	 */
+	public String getStickySession() {
+		return stickySession;
+	}
+
+	/**
+	 * 是否打开会话粘连模式
+	 * 
+	 * @param stickySession
+	 *          the stickySession to set
+	 */
+	public void setStickySession(String stickySession) {
+		this.stickySession = stickySession;
+	}
+	
 	protected String serverlist = "127.0.0.1:6379"; //用逗号(,)分隔的"ip:port"列表
 
 	/**
@@ -262,7 +284,8 @@ public class RedisManager extends StandardManager {
 		super.init();
 
 		debugEnabled = Boolean.parseBoolean(debug);
-
+		stickySessionEnabled = Boolean.parseBoolean(stickySession);
+		
 		synchronized (RedisManager.class) {
 			try {
 				if (_shardedPool == null && _pool == null) {
@@ -351,8 +374,8 @@ public class RedisManager extends StandardManager {
 
 	@Override
 	public String toString() {
-		return "RedisManager{" + "debug=" + debug + ",serverlist=" + serverlist + ",minConn=" + minConn + ",maxConn="
-		    + maxConn + ",socketTO=" + socketTO + '}';
+		return "RedisManager{" + "stickySession=" + stickySession + ",debug=" + debug + ",serverlist=" + serverlist
+		    + ",minConn=" + minConn + ",maxConn=" + maxConn + ",socketTO=" + socketTO + '}';
 	}
 
 	byte[] serialize(Object obj) throws IOException {

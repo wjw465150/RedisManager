@@ -34,7 +34,10 @@ public class RedisSession extends StandardSession {
 			return;
 		}
 		try {
-			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
+			if (_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval) == 0) {
+				_manager.jedisHset(RedisManager.TOMCAT_SESSION_PREFIX + this.id, "__[creationTime]__", String.valueOf(System.currentTimeMillis()).getBytes());
+				_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
+			}
 		} catch (Exception ex) {
 			log.error("error:", ex);
 		}
@@ -52,17 +55,36 @@ public class RedisSession extends StandardSession {
 			return value;
 		}
 		try {
-			byte[] bytesValue = _manager.jedisHget(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
-			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
-			if (bytesValue == null) {
-				return value;
-			}
+			if (_manager.stickySessionEnabled) {
+				if (value == null) {
+					byte[] bytesValue = _manager.jedisHget(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
+					if (bytesValue == null) {
+						return value;
+					}
 
-			if (_manager.debugEnabled) {
-				log.info("id=" + this.id + ",name=" + name + ",strValue=" + new String(bytesValue, Protocol.CHARSET));
-			}
+					if (_manager.debugEnabled) {
+						log.info("id=" + this.id + ",name=" + name + ",strValue=" + new String(bytesValue, Protocol.CHARSET));
+					}
 
-			return _manager.deserialize(bytesValue);
+					value = _manager.deserialize(bytesValue);
+					super.setAttribute(name, value, false); //属性添加到本地的attributes中.
+
+					return value;
+				} else {
+					return value;
+				}
+			} else { //不是stickySessionEnabled,那么每次都要从redis里获取属性值.
+				byte[] bytesValue = _manager.jedisHget(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name);
+				if (bytesValue == null) {
+					return value;
+				}
+
+				if (_manager.debugEnabled) {
+					log.info("id=" + this.id + ",name=" + name + ",strValue=" + new String(bytesValue, Protocol.CHARSET));
+				}
+
+				return _manager.deserialize(bytesValue);
+			}
 		} catch (Exception ex) {
 			log.error("error:name=" + name + ";value=" + value, ex);
 			return value;
@@ -90,7 +112,6 @@ public class RedisSession extends StandardSession {
 				log.info("id=" + this.id + ",name=" + name + ",strValue=" + new String(bytesValue, Protocol.CHARSET));
 			}
 			_manager.jedisHset(RedisManager.TOMCAT_SESSION_PREFIX + this.id, name, bytesValue);
-			_manager.jedisExpire(RedisManager.TOMCAT_SESSION_PREFIX + this.id, this.maxInactiveInterval);
 		} catch (Exception ex) {
 			log.error("error:name=" + name + ";value=" + value, ex);
 		}
