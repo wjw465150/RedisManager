@@ -1,9 +1,5 @@
 package org.apache.catalina.session.ext;
 
-import org.apache.commons.pool.impl.GenericObjectPool;
-import org.jboss.serial.io.JBossObjectInputStream;
-import org.jboss.serial.io.JBossObjectOutputStream;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,11 +7,15 @@ import java.io.IOException;
 import org.apache.catalina.Session;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
+import org.apache.commons.pool.impl.GenericObjectPool;
+import org.jboss.serial.io.JBossObjectInputStream;
+import org.jboss.serial.io.JBossObjectOutputStream;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisShardInfo;
+import redis.clients.jedis.PipelineBlock;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
@@ -74,7 +74,7 @@ public class RedisManager extends StandardManager {
 	public void setStickySession(String stickySession) {
 		this.stickySession = stickySession;
 	}
-	
+
 	protected String serverlist = "127.0.0.1:6379"; //用逗号(,)分隔的"ip:port"列表
 
 	/**
@@ -285,7 +285,7 @@ public class RedisManager extends StandardManager {
 
 		debugEnabled = Boolean.parseBoolean(debug);
 		stickySessionEnabled = Boolean.parseBoolean(stickySession);
-		
+
 		synchronized (RedisManager.class) {
 			try {
 				if (_shardedPool == null && _pool == null) {
@@ -311,8 +311,7 @@ public class RedisManager extends StandardManager {
 						java.util.List<JedisShardInfo> shards = new java.util.ArrayList<JedisShardInfo>(servers.length);
 						for (int i = 0; i < servers.length; i++) {
 							String[] hostAndPort = servers[i].split(":");
-							JedisShardInfo shardInfo = new JedisShardInfo(hostAndPort[0], Integer.parseInt(hostAndPort[1]),
-							    Integer.valueOf(socketTO));
+							JedisShardInfo shardInfo = new JedisShardInfo(hostAndPort[0], Integer.parseInt(hostAndPort[1]), Integer.valueOf(socketTO));
 							if (hostAndPort.length == 3) {
 								shardInfo.setPassword(hostAndPort[2]);
 							}
@@ -320,8 +319,7 @@ public class RedisManager extends StandardManager {
 						}
 
 						if (shards.size() == 1) {
-							_pool = new JedisPool(poolConfig, shards.get(0).getHost(), shards.get(0).getPort(), shards.get(0)
-							    .getTimeout(), shards.get(0).getPassword());
+							_pool = new JedisPool(poolConfig, shards.get(0).getHost(), shards.get(0).getPort(), shards.get(0).getTimeout(), shards.get(0).getPassword());
 							log.info("使用:JedisPool");
 						} else {
 							_shardedPool = new ShardedJedisPool(poolConfig, shards);
@@ -453,36 +451,6 @@ public class RedisManager extends StandardManager {
 		}
 	}
 
-	//	Long jedisTtl(String key) {
-	//		if (_pool != null) {
-	//			Jedis jedis = null;
-	//			try {
-	//				jedis = _pool.getResource();
-	//				return jedis.ttl(key);
-	//			} finally {
-	//				if (jedis != null) {
-	//					try {
-	//						_pool.returnResource(jedis);
-	//					} catch (Throwable thex) {
-	//					}
-	//				}
-	//			}
-	//		} else {
-	//			ShardedJedis jedis = null;
-	//			try {
-	//				jedis = _shardedPool.getResource();
-	//				return jedis.ttl(key);
-	//			} finally {
-	//				if (jedis != null) {
-	//					try {
-	//						_shardedPool.returnResource(jedis);
-	//					} catch (Throwable thex) {
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-
 	java.util.List<Object> jedisMulti(String key, TransactionBlock jedisTransaction) {
 		if (_pool != null) {
 			Jedis jedis = null;
@@ -504,6 +472,41 @@ public class RedisManager extends StandardManager {
 				byte[] bytesKey = key.getBytes(Protocol.CHARSET);
 				Jedis jedisA = jedis.getShard(bytesKey);
 				return jedisA.multi(jedisTransaction);
+			} catch (IOException e) {
+				throw new JedisConnectionException(e);
+			} finally {
+				if (jedis != null) {
+					try {
+						_shardedPool.returnResource(jedis);
+					} catch (Throwable thex) {
+					}
+				}
+			}
+		}
+
+	}
+
+	java.util.List<Object> jedisPipelined(String key, PipelineBlock pipelineBlock) {
+		if (_pool != null) {
+			Jedis jedis = null;
+			try {
+				jedis = _pool.getResource();
+				return jedis.pipelined(pipelineBlock);
+			} finally {
+				if (jedis != null) {
+					try {
+						_pool.returnResource(jedis);
+					} catch (Throwable thex) {
+					}
+				}
+			}
+		} else {
+			ShardedJedis jedis = null;
+			try {
+				jedis = _shardedPool.getResource();
+				byte[] bytesKey = key.getBytes(Protocol.CHARSET);
+				Jedis jedisA = jedis.getShard(bytesKey);
+				return jedisA.pipelined(pipelineBlock);
 			} catch (IOException e) {
 				throw new JedisConnectionException(e);
 			} finally {
@@ -616,6 +619,42 @@ public class RedisManager extends StandardManager {
 		}
 	}
 
+	Long jedisDel(String key) {
+		if (_pool != null) {
+			Jedis jedis = null;
+			try {
+				jedis = _pool.getResource();
+				return jedis.del(key.getBytes(Protocol.CHARSET));
+			} catch (IOException e) {
+				throw new JedisConnectionException(e);
+			} finally {
+				if (jedis != null) {
+					try {
+						_pool.returnResource(jedis);
+					} catch (Throwable thex) {
+					}
+				}
+			}
+		} else {
+			ShardedJedis jedis = null;
+			try {
+				jedis = _shardedPool.getResource();
+				byte[] bytesKey = key.getBytes(Protocol.CHARSET);
+				Jedis jedisA = jedis.getShard(bytesKey);
+				return jedisA.del(bytesKey);
+			} catch (IOException e) {
+				throw new JedisConnectionException(e);
+			} finally {
+				if (jedis != null) {
+					try {
+						_shardedPool.returnResource(jedis);
+					} catch (Throwable thex) {
+					}
+				}
+			}
+		}
+	}
+
 	//	String jedisGet(String key) {
 	//		if (_pool != null) {
 	//			Jedis jedis = null;
@@ -691,40 +730,35 @@ public class RedisManager extends StandardManager {
 	//			}
 	//		}
 	//	}
+	//
+	//	Long jedisTtl(String key) {
+	//		if (_pool != null) {
+	//			Jedis jedis = null;
+	//			try {
+	//				jedis = _pool.getResource();
+	//				return jedis.ttl(key);
+	//			} finally {
+	//				if (jedis != null) {
+	//					try {
+	//						_pool.returnResource(jedis);
+	//					} catch (Throwable thex) {
+	//					}
+	//				}
+	//			}
+	//		} else {
+	//			ShardedJedis jedis = null;
+	//			try {
+	//				jedis = _shardedPool.getResource();
+	//				return jedis.ttl(key);
+	//			} finally {
+	//				if (jedis != null) {
+	//					try {
+	//						_shardedPool.returnResource(jedis);
+	//					} catch (Throwable thex) {
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
 
-	Long jedisDel(String key) {
-		if (_pool != null) {
-			Jedis jedis = null;
-			try {
-				jedis = _pool.getResource();
-				return jedis.del(key.getBytes(Protocol.CHARSET));
-			} catch (IOException e) {
-				throw new JedisConnectionException(e);
-			} finally {
-				if (jedis != null) {
-					try {
-						_pool.returnResource(jedis);
-					} catch (Throwable thex) {
-					}
-				}
-			}
-		} else {
-			ShardedJedis jedis = null;
-			try {
-				jedis = _shardedPool.getResource();
-				byte[] bytesKey = key.getBytes(Protocol.CHARSET);
-				Jedis jedisA = jedis.getShard(bytesKey);
-				return jedisA.del(bytesKey);
-			} catch (IOException e) {
-				throw new JedisConnectionException(e);
-			} finally {
-				if (jedis != null) {
-					try {
-						_shardedPool.returnResource(jedis);
-					} catch (Throwable thex) {
-					}
-				}
-			}
-		}
-	}
 }
