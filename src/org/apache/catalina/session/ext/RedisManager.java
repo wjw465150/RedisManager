@@ -8,8 +8,6 @@ import org.apache.catalina.Session;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.jboss.serial.io.JBossObjectInputStream;
-import org.jboss.serial.io.JBossObjectOutputStream;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -377,17 +375,11 @@ public class RedisManager extends StandardManager {
 	}
 
 	byte[] serialize(Object obj) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		JBossObjectOutputStream oos = new JBossObjectOutputStream(baos);
-		oos.writeObject(obj);
-		return baos.toByteArray();
+		return KryoSerializer.write(obj);
 	}
 
 	Object deserialize(byte[] bb) throws IOException, ClassNotFoundException {
-		ByteArrayInputStream bais = new ByteArrayInputStream(bb);
-		JBossObjectInputStream ois = new JBossObjectInputStream(bais);
-		return ois.readObject();
-
+		return KryoSerializer.read(bb);
 	}
 
 	//TODO@Redis·½·¨
