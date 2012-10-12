@@ -1,6 +1,7 @@
 package org.apache.catalina.session.ext;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -66,12 +67,25 @@ public final class KryoSerializer {
           if (Date.class.isAssignableFrom(type)) {
             return new DateSerializer(type);
           }
+
+          //ÅÐ¶ÏÊÇ·ñÊÇEnhancerByCGLIB
+          try {
+            if (type.getName().indexOf("$$EnhancerByCGLIB$$") > 0) {
+              Method method = Class.forName("de.javakaffee.kryoserializers.cglib.CGLibProxySerializer").getDeclaredMethod("canSerialize", Class.class);
+              if ((Boolean) method.invoke(null, type)) {
+                return getSerializer(Class.forName("de.javakaffee.kryoserializers.cglib.CGLibProxySerializer$CGLibProxyMarker"));
+              }
+            }
+          } catch (Throwable thex) {
+            //thex.printStackTrace();
+          }
+
           return super.getDefaultSerializer(type);
         }
       };
 
       kryo.setRegistrationRequired(false);
-      
+
       kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());
       kryo.register(Collections.EMPTY_LIST.getClass(), new CollectionsEmptyListSerializer());
       kryo.register(Collections.EMPTY_MAP.getClass(), new CollectionsEmptyMapSerializer());
@@ -85,6 +99,24 @@ public final class KryoSerializer {
       kryo.register(InvocationHandler.class, new JdkProxySerializer());
       UnmodifiableCollectionsSerializer.registerSerializers(kryo);
       SynchronizedCollectionsSerializer.registerSerializers(kryo);
+
+      //¶¯Ì¬×¢²áJodaDateTimeSerializer
+      try {
+        Class<?> clazz = Class.forName("org.joda.time.DateTime");
+        Serializer<?> serializer = (Serializer<?>) Class.forName("de.javakaffee.kryoserializers.jodatime.JodaDateTimeSerializer").newInstance();
+        kryo.register(clazz, serializer);
+      } catch (Throwable thex) {
+        //thex.printStackTrace();
+      }
+
+      //¶¯Ì¬×¢²áCGLibProxySerializer
+      try {
+        Class<?> clazz = Class.forName("de.javakaffee.kryoserializers.cglib.CGLibProxySerializer$CGLibProxyMarker");
+        Serializer<?> serializer = (Serializer<?>) Class.forName("de.javakaffee.kryoserializers.cglib.CGLibProxySerializer").newInstance();
+        kryo.register(clazz, serializer);
+      } catch (Throwable thex) {
+        //thex.printStackTrace();
+      }
 
       return kryo;
     }
