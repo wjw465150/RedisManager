@@ -15,7 +15,7 @@
     <pathelement location="lib/servlet-api.jar" />
     <pathelement location="lib/tomcat-coyote.jar" />
     <pathelement location="lib/tomcat-juli.jar" />
-  	<pathelement location="lib/jarjar-1.2.jar"/>
+  	<pathelement location="lib/jarjar-1.4.jar"/>
   	<pathelement location="lib/com.springsource.org.apache.commons.pool-1.5.3.jar"/>
   	<pathelement location="lib/kryo-all.jar"/>
   </path>
@@ -48,7 +48,7 @@
     <echo message="project path: ${basedir}" />
 
   	<!-- 生成不需要依赖的wjw-redismanager.jar  -->
-  	<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"  classpath="lib/jarjar-1.2.jar"/>
+  	<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"  classpath="lib/jarjar-1.4.jar"/>
   	<jarjar jarfile="${basedir}/wjw-redismanager.jar">
   		<fileset dir="${basedir}/bin">
   		  <include name="**/ext/**" />
