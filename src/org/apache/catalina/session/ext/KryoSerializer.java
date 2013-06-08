@@ -4,7 +4,9 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -12,6 +14,8 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
@@ -20,6 +24,7 @@ import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
 
 import de.javakaffee.kryoserializers.ArraysAsListSerializer;
+import de.javakaffee.kryoserializers.BitSetSerializer;
 import de.javakaffee.kryoserializers.CollectionsEmptyListSerializer;
 import de.javakaffee.kryoserializers.CollectionsEmptyMapSerializer;
 import de.javakaffee.kryoserializers.CollectionsEmptySetSerializer;
@@ -34,7 +39,10 @@ import de.javakaffee.kryoserializers.EnumSetSerializer;
 import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
 import de.javakaffee.kryoserializers.JdkProxySerializer;
 import de.javakaffee.kryoserializers.KryoReflectionFactorySupport;
+import de.javakaffee.kryoserializers.RegexSerializer;
 import de.javakaffee.kryoserializers.SynchronizedCollectionsSerializer;
+import de.javakaffee.kryoserializers.URISerializer;
+import de.javakaffee.kryoserializers.UUIDSerializer;
 import de.javakaffee.kryoserializers.UnmodifiableCollectionsSerializer;
 
 /**
@@ -97,6 +105,11 @@ public final class KryoSerializer {
       kryo.register(BigInteger.class, new DefaultSerializers.BigIntegerSerializer());
       kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer());
       kryo.register(InvocationHandler.class, new JdkProxySerializer());
+      kryo.register( Pattern.class, new RegexSerializer() );
+      kryo.register( BitSet.class, new BitSetSerializer() );
+      kryo.register( URI.class, new URISerializer() );
+      kryo.register( UUID.class, new UUIDSerializer() );
+
       UnmodifiableCollectionsSerializer.registerSerializers(kryo);
       SynchronizedCollectionsSerializer.registerSerializers(kryo);
 
