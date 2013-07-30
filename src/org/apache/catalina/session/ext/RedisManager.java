@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Session;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
@@ -27,8 +29,8 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  * @author Administrator
  */
 public class RedisManager extends StandardManager {
-  private final Log log = LogFactory.getLog(RedisManager.class);
-	
+	private final Log log = LogFactory.getLog(RedisManager.class);
+
 	static final String TOMCAT_SESSION_PREFIX = "TS:";
 	static ShardedJedisPool _shardedPool = null;
 	static JedisPool _pool = null;
@@ -182,7 +184,7 @@ public class RedisManager extends StandardManager {
 	@Override
 	public Session findSession(String id) throws IOException {
 		Session session = super.findSession(id);
-		if (!this.isInitialized()) {
+		if (!this.isStarted()) {
 			return session;
 		}
 		if (session == null && id != null) { //说明session有可能在另一个节点上
@@ -228,7 +230,7 @@ public class RedisManager extends StandardManager {
 	@Override
 	public Session createSession(String sessionId) {
 		Session session = super.createSession(sessionId);
-		if (!this.isInitialized()) {
+		if (!this.isStarted()) {
 			return session;
 		}
 
@@ -266,7 +268,7 @@ public class RedisManager extends StandardManager {
 			log.info("id=" + session.getId());
 		}
 		super.remove(session);
-		if (!this.isInitialized()) {
+		if (!this.isStarted()) {
 			return;
 		}
 
@@ -277,13 +279,13 @@ public class RedisManager extends StandardManager {
 		}
 	}
 
-	public boolean isInitialized() {
-		return super.initialized;
+	public boolean isStarted() {
+		return (super.getState() == LifecycleState.STARTED);
 	}
 
 	@Override
-	public void init() {
-		super.init();
+	protected void startInternal() throws LifecycleException {
+		super.startInternal();
 
 		debugEnabled = Boolean.parseBoolean(debug);
 		stickySessionEnabled = Boolean.parseBoolean(stickySession);
@@ -342,33 +344,35 @@ public class RedisManager extends StandardManager {
 	}
 
 	@Override
-	public void destroy() {
-		super.destroy();
+	protected void stopInternal() throws LifecycleException {
+		try {
+			synchronized (RedisManager.class) {
+				if (_shardedPool != null) {
+					ShardedJedisPool myPool = _shardedPool;
+					_shardedPool = null;
+					try {
+						myPool.destroy();
+						log.info("销毁RedisManager:" + this.toString());
+					} catch (Exception ex) {
+						log.error("error:", ex);
+					}
 
-		synchronized (RedisManager.class) {
-			if (_shardedPool != null) {
-				ShardedJedisPool myPool = _shardedPool;
-				_shardedPool = null;
-				try {
-					myPool.destroy();
-					log.info("销毁RedisManager:" + this.toString());
-				} catch (Exception ex) {
-					log.error("error:", ex);
 				}
 
-			}
+				if (_pool != null) {
+					JedisPool myPool = _pool;
+					_pool = null;
+					try {
+						myPool.destroy();
+						log.info("销毁RedisManager:" + this.toString());
+					} catch (Exception ex) {
+						log.error("error:", ex);
+					}
 
-			if (_pool != null) {
-				JedisPool myPool = _pool;
-				_pool = null;
-				try {
-					myPool.destroy();
-					log.info("销毁RedisManager:" + this.toString());
-				} catch (Exception ex) {
-					log.error("error:", ex);
 				}
-
 			}
+		} finally {
+			super.stopInternal();
 		}
 	}
 

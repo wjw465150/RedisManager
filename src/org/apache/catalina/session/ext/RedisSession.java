@@ -39,7 +39,7 @@ public class RedisSession extends StandardSession {
 		}
 		super.access();
 
-		if (!_manager.isInitialized()) {
+		if (!_manager.isStarted()) {
 			return;
 		}
 		try {
@@ -59,7 +59,7 @@ public class RedisSession extends StandardSession {
 			return value;
 		}
 
-		if (!_manager.isInitialized()) {
+		if (!_manager.isStarted()) {
 			return value;
 		}
 		try {
@@ -111,7 +111,7 @@ public class RedisSession extends StandardSession {
 			return;
 		}
 
-		if (!_manager.isInitialized()) {
+		if (!_manager.isStarted()) {
 			return;
 		}
 		try {
@@ -132,7 +132,7 @@ public class RedisSession extends StandardSession {
 		}
 		super.removeAttributeInternal(name, notify);
 
-		if (!_manager.isInitialized()) {
+		if (!_manager.isStarted()) {
 			return;
 		}
 		try {
@@ -149,7 +149,7 @@ public class RedisSession extends StandardSession {
 		}
 		super.expire(notify); //在expire里就会清空当前session的所有属性
 
-		if (!_manager.isInitialized()) {
+		if (!_manager.isStarted()) {
 			return;
 		}
 		try {
