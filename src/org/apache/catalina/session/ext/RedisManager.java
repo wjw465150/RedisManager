@@ -8,6 +8,8 @@ import org.apache.catalina.Session;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -25,6 +27,8 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  * @author Administrator
  */
 public class RedisManager extends StandardManager {
+  private final Log log = LogFactory.getLog(RedisManager.class);
+	
 	static final String TOMCAT_SESSION_PREFIX = "TS:";
 	static ShardedJedisPool _shardedPool = null;
 	static JedisPool _pool = null;
