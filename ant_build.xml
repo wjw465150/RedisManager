@@ -47,9 +47,9 @@
     <echo message="-post-build:begin" />
     <echo message="project path: ${basedir}" />
 
-  	<!-- 生成不需要依赖的wjw-redismanager.jar  -->
+  	<!-- 生成不需要依赖的wjw-redismanager7.jar  -->
   	<taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"  classpath="lib/jarjar-1.4.jar"/>
-  	<jarjar jarfile="${basedir}/wjw-redismanager.jar">
+  	<jarjar jarfile="${basedir}/wjw-redismanager7.jar">
   		<fileset dir="${basedir}/bin">
   		  <include name="**/ext/**" />
   		  <include name="redis/**" />
@@ -66,18 +66,18 @@
 
   	<delete dir="${basedir}/tmp" quiet="true"/>
   	<mkdir dir="${basedir}/tmp"/>
-  	<unzip src="${basedir}/wjw-redismanager.jar" dest="${basedir}/tmp">
+  	<unzip src="${basedir}/wjw-redismanager7.jar" dest="${basedir}/tmp">
   	</unzip>
-  	<delete file="${basedir}/wjw-redismanager.jar"/>
+  	<delete file="${basedir}/wjw-redismanager7.jar"/>
 
-    <jar destfile="${basedir}/wjw-redismanager.jar">
+    <jar destfile="${basedir}/wjw-redismanager7.jar">
       <fileset dir="${basedir}/tmp">
         <include name="org/apache/catalina/**" />
         <include name="internal/**" />
       </fileset>
   	  <manifest>
   		  <attribute name="Built-By" value="wjw465150@gmail.com" />
-  		  <attribute name="Build-Name" value="wjw-redismanager" />
+  		  <attribute name="Build-Name" value="wjw-redismanager7" />
   		  <attribute name="Build-Version" value="2.2" />
   	  </manifest>
     </jar>
