@@ -92,6 +92,7 @@ public final class KryoSerializer {
         }
       };
 
+      kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
       kryo.setRegistrationRequired(false);
 
       kryo.register(Arrays.asList("").getClass(), new ArraysAsListSerializer());
@@ -131,7 +132,6 @@ public final class KryoSerializer {
         //thex.printStackTrace();
       }
 
-      kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
       return kryo;
     }
   };
