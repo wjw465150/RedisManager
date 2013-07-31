@@ -131,6 +131,7 @@ public final class KryoSerializer {
         //thex.printStackTrace();
       }
 
+      kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
       return kryo;
     }
   };
