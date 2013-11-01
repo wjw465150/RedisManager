@@ -61,7 +61,6 @@
   		<rule pattern="redis.**" result="internal.redis.@1"/>
   		<rule pattern="com.esotericsoftware.**" result="internal.com.esotericsoftware.@1"/>
   		<rule pattern="de.**" result="internal.de.@1"/>
-  		<rule pattern="org.objenesis.**" result="internal.org.objenesis.@1"/>
     </jarjar>
 
   	<delete dir="${basedir}/tmp" quiet="true"/>
