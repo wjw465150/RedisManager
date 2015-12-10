@@ -17,7 +17,7 @@
     <pathelement location="lib/tomcat-juli.jar" />
   	<pathelement location="lib/jarjar-1.4.jar"/>
   	<pathelement location="lib/com.springsource.org.apache.commons.pool-1.5.3.jar"/>
-  	<pathelement location="lib/kryo-all.jar"/>
+  	<pathelement location="lib/kryo-all-3.jar"/>
   </path>
   
   <target name="init">
@@ -55,7 +55,7 @@
   		  <include name="redis/**" />
   		</fileset>
     	<zipfileset src="lib/com.springsource.org.apache.commons.pool-1.5.3.jar"/>
-    	<zipfileset src="lib/kryo-all.jar"/>
+    	<zipfileset src="lib/kryo-all-3.jar"/>
 
   		<rule pattern="org.apache.commons.pool.**" result="internal.org.apache.commons.pool.@1"/>
   		<rule pattern="redis.**" result="internal.redis.@1"/>
@@ -73,11 +73,12 @@
       <fileset dir="${basedir}/tmp">
         <include name="org/apache/catalina/**" />
         <include name="internal/**" />
+        <include name="org/wjw/kryo/**" />
       </fileset>
   	  <manifest>
   		  <attribute name="Built-By" value="wjw465150@gmail.com" />
   		  <attribute name="Build-Name" value="wjw-redismanager7" />
-  		  <attribute name="Build-Version" value="2.2" />
+  		  <attribute name="Build-Version" value="3.0" />
   	  </manifest>
     </jar>
   	<delete dir="${basedir}/tmp" quiet="true"/>

@@ -1,7 +1,5 @@
 package org.apache.catalina.session.ext;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.catalina.LifecycleException;
@@ -12,6 +10,7 @@ import org.apache.catalina.session.StandardSession;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.wjw.kryo.wrapper.KryoSerializer;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
