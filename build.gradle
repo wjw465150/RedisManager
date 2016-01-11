@@ -1,0 +1,81 @@
+apply plugin: 'java'
+
+defaultTasks 'makeOneJar'
+
+//repositories {
+//mavenCentral()
+//flatDir(dirs: file('jarsDerectory'))
+//}
+
+dependencies {
+  compile files("lib/catalina.jar")
+  compile files("lib/servlet-api.jar")
+  compile files("lib/tomcat-coyote.jar")
+  compile files("lib/tomcat-juli.jar")
+  compile files("lib/jarjar-1.4.jar")
+  compile files("lib/com.springsource.org.apache.commons.pool-1.5.3.jar")
+  compile files("lib/kryo-all-3.jar")
+}
+
+sourceSets {
+	sourceCompatibility = 1.5
+	targetCompatibility = 1.5
+	main {
+		java {
+			srcDirs = ['src']
+		}
+		resources {
+			srcDirs = ['src']
+		}
+	}
+}
+
+jar {  //禁止执行Jar Task
+  onlyIf { Task task ->
+    return false
+  }
+}
+
+task makeOneJar(dependsOn: compileJava) << {
+	def basedir="${projectDir}"
+	def oneJarName="wjw-redismanager7.jar"
+	
+	ant.echo("Ant Build OneJar:${oneJarName} Start...")
+	
+	ant.taskdef(name: "jarjar", classname: "com.tonicsystems.jarjar.JarJarTask",  classpath: "lib/jarjar-1.4.jar")
+	ant.jarjar(jarfile: "${basedir}/${oneJarName}") {
+		fileset(dir: "${sourceSets['main'].output.classesDir}") {
+			include(name: "**/ext/**")
+			include(name: "redis/**")
+		}
+		zipfileset(src: "lib/com.springsource.org.apache.commons.pool-1.5.3.jar")
+		zipfileset(src: "lib/kryo-all-3.jar")
+		rule(pattern: "org.apache.commons.pool.**",result: "internal.org.apache.commons.pool.@1")
+		rule(pattern: "redis.**", result: "internal.redis.@1")
+		rule(pattern: "com.esotericsoftware.**", result: "internal.com.esotericsoftware.@1")
+		rule(pattern: "de.**", result: "internal.de.@1")
+		rule(pattern: "org.wjw.kryo.**", result: "internal.org.wjw.kryo.@1")
+	}
+
+	ant.delete(dir: "${basedir}/tmp", quiet: "true")
+	ant.mkdir(dir: "${basedir}/tmp")
+	ant.unzip(src: "${basedir}/${oneJarName}", dest: "${basedir}/tmp")
+	ant.delete(file: "${basedir}/${oneJarName}")
+
+	ant.jar(destfile: "${basedir}/${oneJarName}") {
+		fileset(dir: "${basedir}/tmp") {
+			include(name: "org/apache/catalina/**")
+			include(name: "internal/**")
+		}
+		delegate.manifest {
+			attribute(name: "Built-By", value: "wjw465150@gmail.com")
+			attribute(name: "Build-Name", value: "${oneJarName}")
+			attribute(name: "Build-Version", value: "3.0")
+		}
+	}
+	ant.delete(dir: "${basedir}/tmp", quiet: "true")
+
+	ant.echo("Ant Build OneJar:${oneJarName} End!")
+	
+	clean.execute()
+}
