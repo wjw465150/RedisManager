@@ -50,11 +50,11 @@ task makeOneJar(dependsOn: compileJava) << {
 		}
 		zipfileset(src: "lib/com.springsource.org.apache.commons.pool-1.5.3.jar")
 		zipfileset(src: "lib/kryo-all-3.jar")
-		rule(pattern: "org.apache.commons.pool.**",result: "internal.org.apache.commons.pool.@1")
-		rule(pattern: "redis.**", result: "internal.redis.@1")
-		rule(pattern: "com.esotericsoftware.**", result: "internal.com.esotericsoftware.@1")
-		rule(pattern: "de.**", result: "internal.de.@1")
-		rule(pattern: "org.wjw.kryo.**", result: "internal.org.wjw.kryo.@1")
+		rule(pattern: "org.apache.commons.pool.**",result: "redismanager.deps.org.apache.commons.pool.@1")
+		rule(pattern: "redis.**", result: "redismanager.deps.redis.@1")
+		rule(pattern: "com.esotericsoftware.**", result: "redismanager.deps.com.esotericsoftware.@1")
+		rule(pattern: "de.**", result: "redismanager.deps.de.@1")
+		rule(pattern: "org.wjw.kryo.**", result: "redismanager.deps.org.wjw.kryo.@1")
 	}
 
 	ant.delete(dir: "${basedir}/tmp", quiet: "true")
@@ -65,7 +65,7 @@ task makeOneJar(dependsOn: compileJava) << {
 	ant.jar(destfile: "${basedir}/${oneJarName}") {
 		fileset(dir: "${basedir}/tmp") {
 			include(name: "org/apache/catalina/**")
-			include(name: "internal/**")
+			include(name: "redismanager/deps/**")
 		}
 		delegate.manifest {
 			attribute(name: "Built-By", value: "wjw465150@gmail.com")
